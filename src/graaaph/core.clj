@@ -6,7 +6,6 @@
            (org.jrubyparser.ast Node)
            (java.io.StringReader))
   (:require [clojure.zip :as z]
-            [clojure.core.logic :as l]
             [clojure.algo.monads :as m
               :only (domonad maybe-m)]))
 
