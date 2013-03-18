@@ -88,12 +88,18 @@
 (defn data-visitor [node]
   (into {}
    [[:position (get-position-data node)]
-    [:type (-> node .getNodeType str)]]))
+    [:type (-> node .getNodeType str)]
+    [:]))
 
 ;; =============================================================================
 ;; Parser interface - returns map
 
-(defn parse [ruby]
+(defn zipper [ruby]
   (let [parsed (parse-ruby ruby)]
-    (let [zipped (code-zipper parsed)]
-      (tree-visitor zipped (safe-visit data-visitor)))))
+    (code-zipper parsed)))
+
+(defn parse [ruby]
+  (let [zipped (zipper ruby)]
+      (tree-visitor zipped (safe-visit data-visitor))))
+
+(parse (:simple data))
