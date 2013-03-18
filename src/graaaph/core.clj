@@ -10,6 +10,7 @@
             [clojure.algo.monads :as m
               :only (domonad maybe-m)]))
 
+;; =============================================================================
 ;; Zipper Create Functions
 
 (defn can-have-children? [nodes]
@@ -24,7 +25,8 @@
 (defn code-zipper [nodes]
   (z/zipper can-have-children? get-children make-node nodes))
 
-;; Ruby Parsing
+;; =============================================================================
+;; JRuby Interface - Ruby Parsing
 
 (defn parse-ruby [ruby-string]
   (let [config (ParserConfiguration. 0 (CompatVersion/RUBY1_9))
@@ -32,6 +34,7 @@
         parser (Parser.)]
     (.parse parser "" reader config)))
 
+;; =============================================================================
 ;; Zipper Visitor Functions
 
 (defn tree-visitor [zipper visitor]
@@ -51,6 +54,9 @@
         loc
         (recur (z/next loc))))))
 
+;; =============================================================================
+;; AST Data Extraction Helpers
+
 ;; Removes nil from visitor fns
 (defn safe-visit [v]
   (fn [x]
@@ -60,8 +66,13 @@
         :when (not (nil? mx))]
         (mv mx))))
 
+;; A Bizarre but dependable quirk of jruby-parser's AST representation -
+;; nodes that match this class don't have the data for the fn below.
 (defn invalid-ast-node? [node]
   (= (class node) org.jrubyparser.SourcePosition$1))
+
+;; =============================================================================
+;; AST Data Extraction
 
 (defn get-position-data [node]
   (let [position (.getPosition node)]
@@ -75,8 +86,15 @@
          [:start-offset (.getStartOffset position)]
          [:end-offset   (.getEndOffset position)]]))))
 
-(def zipper-to-map
-  (tree-visitor zipped-code (safe-visit (fn [node]
-                                        (into {}
-                                          [[:position (get-position-data node)]
-                                           [:type (-> node .getNodeType str)]])))))
+(defn data-visitor [node]
+  (into {}
+   [[:position (get-position-data node)]
+    [:type (-> node .getNodeType str)]]))
+
+;; =============================================================================
+;; Parser interface - returns map
+
+(defn parse [ruby]
+  (let [parsed (parse-ruby ruby)]
+    (let [zipped (code-zipper parsed)]
+      (tree-visitor zipped (safe-visit data-visitor)))))
