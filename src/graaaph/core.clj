@@ -65,10 +65,8 @@
         :when (not (nil? mx))]
         (mv mx))))
 
-;; A Bizarre but dependable quirk of jruby-parser's AST representation -
-;; nodes that match this class don't have the data for the fn below.
 (defn invalid-ast-node? [node]
-  (= (class node) org.jrubyparser.SourcePosition$1))
+  (.isInvisible node))
 
 ;; =============================================================================
 ;; AST Data Extraction
@@ -76,7 +74,7 @@
 (defn get-position-data [node]
   (let [position (.getPosition node)]
     (cond
-      (invalid-ast-node? position) {}
+      (invalid-ast-node? node) {}
       :else
       (into {}
         [[:file   (.getFile position)]
@@ -88,8 +86,7 @@
 (defn data-visitor [node]
   (into {}
    [[:position (get-position-data node)]
-    [:type (-> node .getNodeType str)]
-    [:]))
+    [:type (-> node .getNodeType str)]]))
 
 ;; =============================================================================
 ;; Parser interface - returns map
@@ -101,5 +98,3 @@
 (defn parse [ruby]
   (let [zipped (zipper ruby)]
       (tree-visitor zipped (safe-visit data-visitor))))
-
-(parse (:simple data))
