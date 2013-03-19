@@ -55,8 +55,19 @@
 
 ;; =============================================================================
 ;; AST Data Extraction Helpers
+
+;; A node is marked "invisible" by the jruby-parser if it does not contain valid
+;; data and can be ignored by programs like ours.
 (defn invalid-ast-node? [node]
   (.isInvisible node))
+
+;; Literal nodes have values
+(defn literal-node? [node]
+  (instance? org.jrubyparser.ast.ILiteralNode node))
+
+;; Named nodes have names (e.g. class variables, ivars, etc.)
+(defn named-node? [node]
+  (instance? org.jrubyparser.ast.INameNode node))
 
 ;; Removes invalid AST ndoes and nil from visitor fns
 (defn safe-visit [v]
@@ -74,7 +85,7 @@
 (defn get-position-data [node]
   (let [position (.getPosition node)]
     (into {}
-      [[:file   (.getFile position)]
+      [[:file         (.getFile position)]
        [:start-line   (.getStartLine position)]
        [:end-line     (.getEndLine position)]
        [:start-offset (.getStartOffset position)]
@@ -83,15 +94,19 @@
 (defn data-visitor [node]
   (into {}
    [[:position (get-position-data node)]
-    [:type (-> node .getNodeType str)]]))
+    [:type     (-> node .getNodeType str)]
+    [:value    (cond (literal-node? node) (.getValue node) :else "")]
+    [:name     (cond (named-node?   node) (.getName  node) :else "")]]))
 
 ;; =============================================================================
-;; Parser interface - returns map
+;; Parser interface
 
+;; Get the code as a zipper
 (defn zipper [ruby]
   (let [parsed (parse-ruby ruby)]
     (code-zipper parsed)))
 
+;; Get the code as a transformed, seqable clojure map
 (defn parse [ruby]
   (let [zipped (zipper ruby)]
       (tree-visitor zipped (safe-visit data-visitor))))
