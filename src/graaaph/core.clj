@@ -55,33 +55,30 @@
 
 ;; =============================================================================
 ;; AST Data Extraction Helpers
+(defn invalid-ast-node? [node]
+  (.isInvisible node))
 
-;; Removes nil from visitor fns
+;; Removes invalid AST ndoes and nil from visitor fns
 (defn safe-visit [v]
   (fn [x]
     (m/domonad m/maybe-m
        [mx (first x)
         mv v
-        :when (not (nil? mx))]
+        :when (and (not (invalid-ast-node? mx))
+                   (not (nil? mx)))]
         (mv mx))))
-
-(defn invalid-ast-node? [node]
-  (.isInvisible node))
 
 ;; =============================================================================
 ;; AST Data Extraction
 
 (defn get-position-data [node]
   (let [position (.getPosition node)]
-    (cond
-      (invalid-ast-node? node) {}
-      :else
-      (into {}
-        [[:file   (.getFile position)]
-         [:start-line   (.getStartLine position)]
-         [:end-line     (.getEndLine position)]
-         [:start-offset (.getStartOffset position)]
-         [:end-offset   (.getEndOffset position)]]))))
+    (into {}
+      [[:file   (.getFile position)]
+       [:start-line   (.getStartLine position)]
+       [:end-line     (.getEndLine position)]
+       [:start-offset (.getStartOffset position)]
+       [:end-offset   (.getEndOffset position)]])))
 
 (defn data-visitor [node]
   (into {}
