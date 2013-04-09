@@ -6,6 +6,7 @@
            (org.jrubyparser.ast Node)
            (java.io.StringReader))
   (:require [clojure.zip :as z]
+            [clojure.core.logic :as l]
             [clojure.algo.monads :as m
               :only (domonad maybe-m)]))
 
@@ -62,12 +63,23 @@
   (.isInvisible node))
 
 ;; Literal nodes have values
-(defn literal-node? [node]
-  (instance? org.jrubyparser.ast.ILiteralNode node))
+(defn value-node? [node]
+  (and
+    (not (instance? org.jrubyparser.ast.ArrayNode node))
+    (instance? org.jrubyparser.ast.ILiteralNode node)))
 
 ;; Named nodes have names (e.g. class variables, ivars, etc.)
 (defn named-node? [node]
   (instance? org.jrubyparser.ast.INameNode node))
+
+(defn scoping-node? [node]
+  (instance? org.jrubyparser.ast.IScopingNode node))
+
+(defn argument-node? [node]
+  (instance? org.jrubyparser.ast.IArgumentNode node))
+
+(defn value-node? [node]
+  (instance? org.jrubyparser.ast.SValueNode node))
 
 ;; Removes invalid AST ndoes and nil from visitor fns
 (defn safe-visit [v]
@@ -77,7 +89,9 @@
         mv v
         :when (and (not (invalid-ast-node? mx))
                    (not (nil? mx)))]
-        (mv mx))))
+        (try
+          (mv mx)
+          (catch IllegalArgumentException e)))))
 
 ;; =============================================================================
 ;; AST Data Extraction
@@ -91,12 +105,21 @@
        [:start-offset (.getStartOffset position)]
        [:end-offset   (.getEndOffset position)]])))
 
-(defn data-visitor [node]
-  (into {}
-   [[:position (get-position-data node)]
-    [:type     (-> node .getNodeType str)]
-    [:value    (cond (literal-node? node) (.getValue node) :else "")]
-    [:name     (cond (named-node?   node) (.getName  node) :else "")]]))
+(defn data-visitor [node-list]
+  (let [node (first node-list)]
+    (if (and (not (nil? node))
+             (not (invalid-ast-node? node)))
+        (into {}
+          [[:position    (get-position-data node)]
+           [:type        (-> node .getNodeType str)]
+           [:value       (if (value-node? node)
+                           (.getValue node))]
+           [:name        (if (named-node? node)
+                           (.getName node))]]))))
+
+;; [:name        (.getName  node)]
+;; [:class-path  (-> node .getCPath .getName)]
+;; [:args        (.getArgs node)]]))
 
 ;; =============================================================================
 ;; Parser interface
@@ -109,4 +132,4 @@
 ;; Get the code as a transformed, seqable clojure map
 (defn parse [ruby]
   (let [zipped (zipper ruby)]
-      (tree-visitor zipped (safe-visit data-visitor))))
+      (tree-visitor zipped data-visitor)))
