@@ -6,9 +6,7 @@
            (org.jrubyparser.ast Node)
            (java.io.StringReader))
   (:require [clojure.zip :as z]
-            [clojure.core.logic :as l]
-            [clojure.algo.monads :as m
-              :only (domonad maybe-m)]))
+            [clojure.core.logic :as l]))
 
 ;; =============================================================================
 ;; Zipper Create Functions
@@ -81,18 +79,6 @@
 (defn value-node? [node]
   (instance? org.jrubyparser.ast.SValueNode node))
 
-;; Removes invalid AST ndoes and nil from visitor fns
-(defn safe-visit [v]
-  (fn [x]
-    (m/domonad m/maybe-m
-       [mx (first x)
-        mv v
-        :when (and (not (invalid-ast-node? mx))
-                   (not (nil? mx)))]
-        (try
-          (mv mx)
-          (catch IllegalArgumentException e)))))
-
 ;; =============================================================================
 ;; AST Data Extraction
 
@@ -130,6 +116,6 @@
     (code-zipper parsed)))
 
 ;; Get the code as a transformed, seqable clojure map
-(defn parse [ruby]
+(defn parse-ruby-code [ruby]
   (let [zipped (zipper ruby)]
       (tree-visitor zipped data-visitor)))

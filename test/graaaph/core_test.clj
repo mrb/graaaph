@@ -13,80 +13,59 @@
            :add             "1+1"})
 
 
-(parse (:dup-method data))
+(parse-ruby-code (:dup-method data))
 
-(defn get-name [name coll]
-  (for [d coll
-        :when (and
-                (not (nil? (:name d)))
-                (= (:name d) name))]
-      d))
-(get-name "a" (parse (:dup-method data)))
+(def ruby-code "class Dude
+                  def awesome
+                    'first awesome'
+                  end
+                  #
+                  def cool
+                    'not awesome'
+                  end
+                  #
+                  def awesome
+                    'second awesome'
+                  end
+                end")
 
-(group-by identity (parse (:dup-method data)))
+(defn get-duplicate-method-names [ruby-code]
+  (let [ruby-data (parse-ruby-code ruby-code)
+        vecs      (for [d ruby-data]
+                    (into [] [(:name d) (:type d)]))
+        results   (l/run* [q]
+                    (l/fresh [list match name names]
+                    (l/== list vecs)
+                    (l/membero match list)
+                    (l/matche [match]
+                      ([[name "DEFNNODE"]] (l/== name names)))
+                    (l/== q names)))]
+     results))
 
-(let [ruby-data (parse "class Dude
-                          def awesome
-                            'first awesome'
-                          end
-                          #
-                          def cool
-                            'not awesome'
-                          end
-                          #
-                          def awesome
-                            'second awesome'
-                          end
-                       end")]
-  (->>
-    ruby-data
-    (filter
-      #(and
-         (not (nil? (:name %)))
-         (= "DEFNNODE" (:type %))))
-    (group-by :name)
-    (filter #(> (count (second %)) 1))))
+(l/defne dupeo
+   "A relation where l is a collection, such that x is removed unless
+   it appears more than once in l."
+   [l q]
+     ([[_] _] l/#u)
+     ([[x x] _])
+     ([[x . tail] _]
+      (l/fresh [qs]
+        (l/membero qs tail)
+        (dupeo tail qs))))
+(l/run* [q]
+   (l/fresh [l]
+     (l/== l [1 3 3])
+     (dupeo l q)))
 
-    (filter #(> (count (second %)) 1))))
+(l/run* [q]
+   (l/conde
+     [(l/membero 4 q)
 
-(let [filtered-list (for [dat ruby-data] {:type (:type dat) :name (:name dat)})
-      names (distinct (map #(:name %) filtered-list))
-      types (distinct (map #(:type %) filtered-list))]
-  (l/run* [q]
-    (l/fresh [list name type vals]
-      (l/== list filtered-list)
-      (l/membero name names)
-      (l/membero type types)
-      (l/membero vals list)
-      (l/== {:type "DEFNNODE" :name name} vals)
-      (l/== q vals))))
+[1 1] [2 3 3 4]
+[2 3] [3 4]
+[3 4]
 
-(let [filtered-list (for [dat ruby-data] [(:type dat) (:name dat)])]
-  (l/run* [q]
-    (l/fresh [list node e f]
-      (l/== list filtered-list)
-      (l/membero q list)
-      (l/firsto q "DEFNNODE"))))
+(get-duplicate-method-names ruby-code)
 
-(let [ruby-data (parse "class Dude
-                          def awesome
-                            'first awesome'
-                          end
-                          #
-                          def cool
-                            'not awesome'
-                          end
-                          #
-                          def awesome
-                            'second awesome'
-                          end
-                       end")
-      results (l/run* [q]
-                  (l/fresh [list node e f]
-                  (l/== list ruby-data)
-                  (l/membero q list)
-                  (l/matche [e]
-                    ([{:position _ :name f :type "DEFNNODE" :value _}] (l/== e q)))))]
-      (->>
-        results
-        (group-by :name)))
+;; graaaph.core=> (get-method-names ruby-code)
+;; ("awesome" "cool" "awesome")
