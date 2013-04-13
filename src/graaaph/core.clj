@@ -6,7 +6,8 @@
            (org.jrubyparser.ast Node)
            (java.io.StringReader))
   (:require [clojure.zip :as z]
-            [clojure.core.logic :as l]))
+            [clojure.core.logic :as l]
+            [clojure.core.logic.fd :as fd]))
 
 ;; =============================================================================
 ;; Zipper Create Functions
@@ -103,7 +104,6 @@
            [:name        (if (named-node? node)
                            (.getName node))]]))))
 
-;; [:name        (.getName  node)]
 ;; [:class-path  (-> node .getCPath .getName)]
 ;; [:args        (.getArgs node)]]))
 
@@ -119,3 +119,15 @@
 (defn parse-ruby-code [ruby]
   (let [zipped (zipper ruby)]
       (tree-visitor zipped data-visitor)))
+
+;; =============================================================================
+;; Ruby AST core.logic relations
+
+(l/defne dupeo
+  "Unifies all duplicates in a list l with q;
+  returns all duplicates as a list"
+  [l q]
+  ([[head . tail] _]
+    (l/conde
+      [(l/membero head tail) (l/== head q)]
+      [(dupeo tail q)])))

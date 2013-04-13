@@ -30,42 +30,17 @@
                 end")
 
 (defn get-duplicate-method-names [ruby-code]
-  (let [ruby-data (parse-ruby-code ruby-code)
-        vecs      (for [d ruby-data]
-                    (into [] [(:name d) (:type d)]))
-        results   (l/run* [q]
-                    (l/fresh [list match name names]
-                    (l/== list vecs)
-                    (l/membero match list)
-                    (l/matche [match]
-                      ([[name "DEFNNODE"]] (l/== name names)))
-                    (l/== q names)))]
-     results))
-
-(l/defne dupeo
-   "A relation where l is a collection, such that x is removed unless
-   it appears more than once in l."
-   [l q]
-     ([[_] _] l/#u)
-     ([[x x] _])
-     ([[x . tail] _]
-      (l/fresh [qs]
-        (l/membero qs tail)
-        (dupeo tail qs))))
-(l/run* [q]
-   (l/fresh [l]
-     (l/== l [1 3 3])
-     (dupeo l q)))
-
-(l/run* [q]
-   (l/conde
-     [(l/membero 4 q)
-
-[1 1] [2 3 3 4]
-[2 3] [3 4]
-[3 4]
+  (let [ruby-data   (parse-ruby-code ruby-code)
+        ast-as-vecs (for [d ruby-data]
+                      (into [] [(:name d) (:type d)]))
+        results     (seq (into #{}
+                      (l/run* [q]
+                        (l/fresh [all-nodes matched-nodes name match dupe-nodes results]
+                          (l/== all-nodes ast-as-vecs)
+                          (dupeo all-nodes dupe-nodes)
+                          (l/matche [dupe-nodes]
+                            ([[name "DEFNNODE"]] (l/== name matched-nodes)))
+                          (l/==  matched-nodes q)))))]
+    results))
 
 (get-duplicate-method-names ruby-code)
-
-;; graaaph.core=> (get-method-names ruby-code)
-;; ("awesome" "cool" "awesome")
