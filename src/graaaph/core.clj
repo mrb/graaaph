@@ -123,11 +123,34 @@
 ;; =============================================================================
 ;; Ruby AST core.logic relations
 
+;; A membero with disequality - thanks @webyrd
+(l/defne membero
+  [x l]
+  ([_ [x . tail]])
+  ([_ [head . tail]]
+      (l/!= x head)
+      (membero x tail)))
+
+(l/defne not-membero
+  [x l]
+  ([_ []])
+  ([_ [y . r]]
+    (l/!= x y)
+    (not-membero x r)))
+
+(l/defne rember*o [x l o]
+  ([_ () ()])
+  ([_ [x . xs] _]
+    (rember*o x xs o))
+  ([_ [y . xs] [y . ys]]
+    (l/!= x y)
+    (rember*o x xs ys)))
+
 (l/defne dupeo
-  "Unifies all duplicates in a list l with q;
-  returns all duplicates as a list"
   [l q]
-  ([[head . tail] _]
-    (l/conde
-      [(l/membero head tail) (l/== head q)]
-      [(dupeo tail q)])))
+  ([[] []])
+  ([ [head . tail] _ ]
+   (l/fresh [new-tail res]
+     (l/conde
+       [(membero head tail) (rember*o head tail new-tail) (dupeo new-tail res) (l/== q (l/lcons head res))]
+       [(not-membero head tail) (dupeo tail q)]))))

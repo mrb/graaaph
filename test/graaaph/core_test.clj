@@ -10,10 +10,16 @@
            :for-loop        "for i in (1..10) do; p i; end"
            :symbol-to_proc  "[1,2,3].map(&:to_s)"
            :simple-map      "[1,2,3].map{|x| x.to_s}"
+           :openstruct      "OpenStruct.new"
            :add             "1+1"})
 
 
 (parse-ruby-code (:dup-method data))
+
+(for [d (map #(:type %) (parse-ruby-code (:class-variable data)))
+      :while (or (== (d "CLASSVARASGNNODE")) (== d "CLASSVARNODE"))] [])
+
+  (into [] d))
 
 (def ruby-code "class Dude
                   def awesome
@@ -27,20 +33,25 @@
                   def awesome
                     'second awesome'
                   end
+                  #
+                  def bro
+                  end
+                  #
+                  def bro
+                  end
                 end")
 
 (defn get-duplicate-method-names [ruby-code]
   (let [ruby-data   (parse-ruby-code ruby-code)
         ast-as-vecs (for [d ruby-data]
                       (into [] [(:name d) (:type d)]))
-        results     (seq (into #{}
-                      (l/run* [q]
-                        (l/fresh [all-nodes matched-nodes name match dupe-nodes results]
-                          (l/== all-nodes ast-as-vecs)
-                          (dupeo all-nodes dupe-nodes)
-                          (l/matche [dupe-nodes]
-                            ([[name "DEFNNODE"]] (l/== name matched-nodes)))
-                          (l/==  matched-nodes q)))))]
+        results     (l/run* [q]
+                      (l/fresh [d n]
+                        (l/== ast-as-vecs d)
+                        (l/matche [d]
+                          ([[name "DEFNNODE"]] (l/== name d)))
+                        (dupeo d n)
+                        (l/== n q)))]
     results))
 
 (get-duplicate-method-names ruby-code)
