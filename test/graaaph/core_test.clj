@@ -16,11 +16,6 @@
 
 (parse-ruby-code (:dup-method data))
 
-(for [d (map #(:type %) (parse-ruby-code (:class-variable data)))
-      :while (or (== (d "CLASSVARASGNNODE")) (== d "CLASSVARNODE"))] [])
-
-  (into [] d))
-
 (def ruby-code "class Dude
                   def awesome
                     'first awesome'
@@ -43,15 +38,15 @@
 
 (defn get-duplicate-method-names [ruby-code]
   (let [ruby-data   (parse-ruby-code ruby-code)
-        ast-as-vecs (for [d ruby-data]
-                      (into [] [(:name d) (:type d)]))
+        ast-as-list (for [d ruby-data
+                           :when (and (seq (:name d))
+                                      (= "DEFNNODE" (:type d)))]
+                      [(:name d) (:type d)])
         results     (l/run* [q]
-                      (l/fresh [d n]
-                        (l/== ast-as-vecs d)
-                        (l/matche [d]
-                          ([[name "DEFNNODE"]] (l/== name d)))
-                        (dupeo d n)
-                        (l/== n q)))]
+                      (l/fresh [ls dupes]
+                        (l/== ls ast-as-list)
+                        (dupeo ls dupes)
+                        (l/== dupes q)))]
     results))
 
 (get-duplicate-method-names ruby-code)

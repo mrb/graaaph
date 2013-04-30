@@ -111,20 +111,20 @@
 ;; Parser interface
 
 ;; Get the code as a zipper
-(defn zipper [ruby]
+(defn ruby-code-zipper [ruby]
   (let [parsed (parse-ruby ruby)]
     (code-zipper parsed)))
 
 ;; Get the code as a transformed, seqable clojure map
 (defn parse-ruby-code [ruby]
-  (let [zipped (zipper ruby)]
+  (let [zipped (ruby-code-zipper ruby)]
       (tree-visitor zipped data-visitor)))
 
 ;; =============================================================================
 ;; Ruby AST core.logic relations
 
-;; A membero with disequality - thanks @webyrd
 (l/defne membero
+  "A membero with disequality - thanks @webyrd"
   [x l]
   ([_ [x . tail]])
   ([_ [head . tail]]
@@ -132,13 +132,16 @@
       (membero x tail)))
 
 (l/defne not-membero
+  "a relation where x is not a member of l"
   [x l]
   ([_ []])
   ([_ [y . r]]
     (l/!= x y)
     (not-membero x r)))
 
-(l/defne rember*o [x l o]
+(l/defne rember*o
+  "a relation that removes all instances of x in l, resulting in o"
+  [x l o]
   ([_ () ()])
   ([_ [x . xs] _]
     (rember*o x xs o))
@@ -147,9 +150,10 @@
     (rember*o x xs ys)))
 
 (l/defne dupeo
+  "a relation that collects all duplicate elements in l exactly once in q"
   [l q]
-  ([[] []])
-  ([ [head . tail] _ ]
+  ([() ()])
+  ([ (head . tail) _ ]
    (l/fresh [new-tail res]
      (l/conde
        [(membero head tail) (rember*o head tail new-tail) (dupeo new-tail res) (l/== q (l/lcons head res))]

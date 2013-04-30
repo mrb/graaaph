@@ -11,15 +11,15 @@ Get code as a map, with a lot of data:
 ```clojure
 (use 'graaaph.core)
 
-(parse "def a;'ok';end")
+(parse-ruby-code "def a;'ok';end")
 
-;;({:position {:file "", :start-line 0, :end-line 0, :start-offset 0, :end-offset 14}, :type "ROOTNODE"}
-;; {:position {:file "", :start-line 0, :end-line 0, :start-offset 0, :end-offset 14}, :type "NEWLINENODE"}
-;; {:position {:file "", :start-line 0, :end-line 0, :start-offset 0, :end-offset 14}, :type "DEFNNODE"}
-;; {:position {:file "", :start-line 0, :end-line 0, :start-offset 4, :end-offset 5}, :type "ARGUMENTNODE"}
-;; {:position {:file "", :start-line 0, :end-line 0, :start-offset 6, :end-offset 6}, :type "ARGSNODE"}
-;; {:position {:file "", :start-line 0, :end-line 0, :start-offset 6, :end-offset 11}, :type "NEWLINENODE"}
-;; {:position {:file "", :start-line 0, :end-line 0, :start-offset 6, :end-offset 10}, :type "STRNODE"})
+;; {:position {:file "", :start-line 0, :end-line 0, :start-offset 0, :end-offset 14}, :type "ROOTNODE", :value nil, :name nil}
+;; {:position {:file "", :start-line 0, :end-line 0, :start-offset 0, :end-offset 14}, :type "NEWLINENODE", :value nil, :name nil}
+;; {:position {:file "", :start-line 0, :end-line 0, :start-offset 0, :end-offset 14}, :type "DEFNNODE", :value nil, :name "a"}
+;; {:position {:file "", :start-line 0, :end-line 0, :start-offset 4, :end-offset 5}, :type "ARGUMENTNODE", :value nil, :name "a"}
+;; {:position {:file "", :start-line 0, :end-line 0, :start-offset 6, :end-offset 6}, :type "ARGSNODE", :value nil, :name nil}
+;; {:position {:file "", :start-line 0, :end-line 0, :start-offset 6, :end-offset 11}, :type "NEWLINENODE", :value nil, :name nil}
+;; {:position {:file "", :start-line 0, :end-line 0, :start-offset 6, :end-offset 10}, :type "STRNODE", :value nil, :name nil}
 ```
 
 Or as a zipper, but still tasting like Java:
@@ -27,12 +27,52 @@ Or as a zipper, but still tasting like Java:
 ```clojure
 (use 'graaaph.core)
 
-(-> (zipper "1")
-     z/next
-     z/next
-     z/node
-     .getValue) ;; From the jruby-parser API
+(-> (ruby-code-zipper "1")
+    z/next
+    z/next
+    z/node
+    .getValue) ;; From the jruby-parser API
 ;; 1
+```
+
+Or use one of a (slowly) growing number of `core.logic` relations:
+
+```clojure
+(def ruby-code "class Dude
+                  def awesome
+                    'first awesome'
+                  end
+                  #
+                  def cool
+                    'not awesome'
+                  end
+                  #
+                  def awesome
+                    'second awesome'
+                  end
+                  #
+                  def bro
+                  end
+                  #
+                  def bro
+                  end
+                end")
+
+(defn get-duplicate-method-names [ruby-code]
+  (let [ruby-data   (parse-ruby-code ruby-code)
+        ast-as-list (for [d ruby-data
+                           :when (and (seq (:name d))
+                                      (= "DEFNNODE" (:type d)))]
+                      [(:name d) (:type d)])
+        results     (l/run* [q]
+                      (l/fresh [ls dupes]
+                        (l/== ls ast-as-list)
+                        (dupeo ls dupes)
+                        (l/== dupes q)))]
+    results))
+
+(get-duplicate-method-names ruby-code)
+;; => ((["awesome" "DEFNNODE"] ["bro" "DEFNNODE"]))
 ```
 
 ## Tests
