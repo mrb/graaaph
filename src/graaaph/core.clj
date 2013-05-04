@@ -4,10 +4,13 @@
                             SourcePosition)
            (org.jrubyparser.parser ParserConfiguration)
            (org.jrubyparser.ast Node)
-           (java.io.StringReader))
+           (java.io.File)
+           (java.io.StringReader)
+           (javax.imageio.ImageIO))
   (:require [clojure.zip :as z]
             [clojure.core.logic :as l]
-            [clojure.core.logic.fd :as fd]))
+            [clojure.core.logic.fd :as fd]
+            [rhizome.viz :as v]))
 
 ;; =============================================================================
 ;; Zipper Create Functions
@@ -119,6 +122,20 @@
 (defn parse-ruby-code [ruby]
   (let [zipped (ruby-code-zipper ruby)]
       (tree-visitor zipped data-visitor)))
+
+;; =============================================================================
+;; Rhizome AST visualization functions
+
+(defn view-ruby-ast [ruby-code]
+  (let [zipper (first (ruby-code-zipper ruby-code))]
+    (v/view-tree can-have-children? get-children zipper
+        :node->descriptor (fn [n] {:label (.getNodeType n)}))))
+
+(defn save-ruby-ast-image [ruby-code filename]
+  (let [zipper (first (ruby-code-zipper ruby-code))
+        buffer (v/tree->image can-have-children? get-children zipper
+                :node->descriptor (fn [n] {:label (.getNodeType n)}))]
+    (ImageIO/write buffer "png"  (File. filename))))
 
 ;; =============================================================================
 ;; Ruby AST core.logic relations

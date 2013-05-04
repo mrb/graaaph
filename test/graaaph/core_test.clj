@@ -37,7 +37,7 @@
                 end")
 
 (defn get-duplicate-method-names [ruby-code]
-  (let [ruby-data   (parse-ruby-code ruby-code)
+  (let [ruby-data (parse-ruby-code ruby-code)
         ast-as-list (for [d ruby-data
                            :when (and (seq (:name d))
                                       (= "DEFNNODE" (:type d)))]
@@ -50,3 +50,15 @@
     results))
 
 (get-duplicate-method-names ruby-code)
+(parse-ruby-code ruby-code)
+
+(def ruby-data [{:a 1 :b 2} {:a 1 :b 3}])
+  (l/run* [q]
+    (l/fresh [a b n]
+      (l/== a ruby-data)
+      (l/matche [a]
+        ([[_ . {:a _ :b n}]] (l/== n b))
+        ([[{:a _ :b n} . _]] (l/== n b)))
+      (l/== b q)))
+
+{:position {:file "" :start-line 0 :end-line 18 :start-offset 0 :end-offset 466} :type "ROOTNODE" :value nil :name nil}
