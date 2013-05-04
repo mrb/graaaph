@@ -2,7 +2,7 @@
 
 graaaph is a Clojure library designed to make it easy to consume, manipulate, and analyze JRuby's AST representation of Ruby code from Clojure. It ties together a bunch of interesting Clojure libraries in the hopes of creating a unified Clojure toolkit for exploring generated Ruby ASTs.
 
-Ruby code is parsed and transformed by the Java <a href="https://github.com/jruby/jruby-parser">jruby-parser</a> library, manipulated by Clojure's <a href="http://clojuredocs.org/clojure_core/clojure.zip/">zipper library</a>, analyzed with <a href="https://github.com/clojure/core.logic">core.logic</a>, and visualized using @ztellman's <a href="https://github.com/ztellman/rhizome">Rhizone</a>.
+Ruby code is parsed and transformed by the Java <a href="https://github.com/jruby/jruby-parser">jruby-parser</a> library, manipulated by Clojure's <a href="http://clojuredocs.org/clojure_core/clojure.zip/">zipper library</a>, analyzed with <a href="https://github.com/clojure/core.logic">core.logic</a>, and visualized using @ztellman's <a href="https://github.com/ztellman/rhizome">Rhizome</a>.
 
 ## Usage
 
