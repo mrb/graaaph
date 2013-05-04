@@ -1,8 +1,8 @@
 # graaaph
 
-graaaph is a Clojure library designed to make it easy to consume, manipulate, and analyze JRuby's AST representation of Ruby code from Clojure.
+graaaph is a Clojure library designed to make it easy to consume, manipulate, and analyze JRuby's AST representation of Ruby code from Clojure. It ties together a bunch of interesting Clojure libraries in the hopes of creating a unified Clojure toolkit for exploring generated Ruby ASTs.
 
-My goal is to use various Clojure tools to analyze and transform Ruby AST, while making the Java interop as transparent as possible.
+Ruby code is parsed and transformed by the Java <a href="https://github.com/jruby/jruby-parser">jruby-parser</a> library, manipulated by Clojure's <a href="http://clojuredocs.org/clojure_core/clojure.zip/">zipper library</a>, analyzed with <a href="https://github.com/clojure/core.logic">core.logic</a>, and visualized using @ztellman's <a href="https://github.com/ztellman/rhizome">Rhizone</a>.
 
 ## Usage
 
@@ -73,7 +73,15 @@ Or use one of a (slowly) growing number of `core.logic` relations:
 
 (get-duplicate-method-names ruby-code)
 ;; => ((["awesome" "DEFNNODE"] ["bro" "DEFNNODE"]))
+
+;; Examine your ast by generating an image of the tree
+(view-ruby-ast ruby-code)
+
+;; or save it as a file
+(save-ruby-ast-image ruby-code "tree.png")
 ```
+
+<img src="tree.png">
 
 ## Tests
 
