@@ -100,13 +100,13 @@
     (if (and (not (nil? node))
              (not (invalid-ast-node? node)))
         (into {}
-          [[:position    (get-position-data node)]
-           [:type        (-> node .getNodeType str)]
+          [[:type        (-> node .getNodeType str)]
            [:value       (if (value-node? node)
                            (.getValue node))]
            [:name        (if (named-node? node)
                            (.getName node))]]))))
 
+;; [:position    (get-position-data node)]
 ;; [:class-path  (-> node .getCPath .getName)]
 ;; [:args        (.getArgs node)]]))
 
@@ -130,12 +130,14 @@
   (let [zipper (first (ruby-code-zipper ruby-code))]
     (v/view-tree can-have-children? get-children zipper
         :options {:dpi 50}
-        :node->descriptor (fn [n] {:label (str (.getNodeType n))}))))
+        :node->descriptor (fn [node] {:shape (cond (named-node? node) "rectangle")
+                                      :label (cond (named-node? node) (str (.getName node) " (" (str (.getNodeType node)) ")")
+                                                   :else (str (.getNodeType node)))}))))
 
 (defn save-ruby-ast-image [ruby-code filename]
   (let [zipper (first (ruby-code-zipper ruby-code))
         buffer (v/tree->image can-have-children? get-children zipper
-                :node->descriptor (fn [n] {:label (.getNodeType n)}))]
+                :node->descriptor (fn [n] {:label (str (.getNodeType n))}))]
     (ImageIO/write buffer "png"  (File. filename))))
 
 ;; =============================================================================
@@ -176,3 +178,13 @@
      (l/conde
        [(membero head tail) (rember*o head tail new-tail) (dupeo new-tail res) (l/== q (l/lcons head res))]
        [(not-membero head tail) (dupeo tail q)]))))
+
+(l/defne nodetypeo
+  "a relation where q is a collection of nodes which match type ntype"
+  [nodes ntype q]
+  ([[head . tail] _ _]
+   (l/matche [head]
+    ([{:type ?type :value _ :name _ }]
+     (l/conde
+       [(l/== ntype ?type) (l/== q head)]
+       [(nodetypeo tail ntype q)])))))
