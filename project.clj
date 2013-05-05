@@ -6,4 +6,4 @@
   :dependencies [[org.clojure/clojure "1.5.0"]
                  [org.clojure/algo.monads "0.1.4"]
                  [org.jruby/jrubyparser "0.4.1"]
-                 [rhizome "0.1.0"]])
+                 [rhizome "0.1.3"]])

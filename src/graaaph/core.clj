@@ -4,9 +4,9 @@
                             SourcePosition)
            (org.jrubyparser.parser ParserConfiguration)
            (org.jrubyparser.ast Node)
-           (java.io.File)
-           (java.io.StringReader)
-           (javax.imageio.ImageIO))
+           (java.io File
+                    StringReader)
+           (javax.imageio ImageIO))
   (:require [clojure.zip :as z]
             [clojure.core.logic :as l]
             [clojure.core.logic.fd :as fd]
@@ -129,7 +129,8 @@
 (defn view-ruby-ast [ruby-code]
   (let [zipper (first (ruby-code-zipper ruby-code))]
     (v/view-tree can-have-children? get-children zipper
-        :node->descriptor (fn [n] {:label (.getNodeType n)}))))
+        :options {:dpi 50}
+        :node->descriptor (fn [n] {:label (str (.getNodeType n))}))))
 
 (defn save-ruby-ast-image [ruby-code filename]
   (let [zipper (first (ruby-code-zipper ruby-code))

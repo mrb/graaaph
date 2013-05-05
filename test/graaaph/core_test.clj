@@ -13,9 +13,6 @@
            :openstruct      "OpenStruct.new"
            :add             "1+1"})
 
-
-(parse-ruby-code (:dup-method data))
-
 (def ruby-code "class Dude
                   def awesome
                     'first awesome'
@@ -35,30 +32,3 @@
                   def bro
                   end
                 end")
-
-(defn get-duplicate-method-names [ruby-code]
-  (let [ruby-data (parse-ruby-code ruby-code)
-        ast-as-list (for [d ruby-data
-                           :when (and (seq (:name d))
-                                      (= "DEFNNODE" (:type d)))]
-                      [(:name d) (:type d)])
-        results     (l/run* [q]
-                      (l/fresh [ls dupes]
-                        (l/== ls ast-as-list)
-                        (dupeo ls dupes)
-                        (l/== dupes q)))]
-    results))
-
-(get-duplicate-method-names ruby-code)
-(parse-ruby-code ruby-code)
-
-(def ruby-data [{:a 1 :b 2} {:a 1 :b 3}])
-  (l/run* [q]
-    (l/fresh [a b n]
-      (l/== a ruby-data)
-      (l/matche [a]
-        ([[_ . {:a _ :b n}]] (l/== n b))
-        ([[{:a _ :b n} . _]] (l/== n b)))
-      (l/== b q)))
-
-{:position {:file "" :start-line 0 :end-line 18 :start-offset 0 :end-offset 466} :type "ROOTNODE" :value nil :name nil}
