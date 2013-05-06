@@ -36,24 +36,13 @@
 (view-ruby-ast ruby-code)
 
 (defn get-duplicate-method-names [ruby-code]
-  (let [ruby-data (parse-ruby-code ruby-code)
-        ast-as-list (for [d ruby-data
-                           :when (and (seq (:name d))
-                                      (= "DEFNNODE" (:type d)))]
-                      [(:name d) (:type d)])
-        results     (l/run* [q]
-                      (l/fresh [ls dupes]
-                        (l/== ls ast-as-list)
-                        (dupeo ls dupes)
-                        (l/== dupes q)))]
-    results))
+  (let [nodes   (parse-ruby-code ruby-code)
+        results (l/run* [q]
+                  (l/fresh [a b c d]
+                    (l/== a nodes)
+                    (nodetypeo a "DEFNNODE" c)
+                    (dupeo c d)
+                    (l/== q d)))]
+        results))
 
 (get-duplicate-method-names ruby-code)
-
-(def nodes (parse-ruby-code ruby-code))
-
-(l/run* [q]
-  (l/fresh [a b c]
-    (l/== a nodes)
-    (nodetypeo a "DEFNNODE" c)
-    (l/== q c)))

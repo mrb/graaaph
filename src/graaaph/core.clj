@@ -174,17 +174,19 @@
   [l q]
   ([() ()])
   ([ (head . tail) _ ]
-   (l/fresh [new-tail res]
-     (l/conde
-       [(membero head tail) (rember*o head tail new-tail) (dupeo new-tail res) (l/== q (l/lcons head res))]
-       [(not-membero head tail) (dupeo tail q)]))))
+    (l/fresh [new-tail res]
+      (l/conde
+        [(membero head tail) (rember*o head tail new-tail) (dupeo new-tail res) (l/== q (l/lcons head res))]
+        [(not-membero head tail) (dupeo tail q)]))))
 
 (l/defne nodetypeo
   "a relation where q is a collection of nodes which match type ntype"
   [nodes ntype q]
+  ([() _ ()])
   ([[head . tail] _ _]
-   (l/matche [head]
-    ([{:type ?type :value _ :name _ }]
-     (l/conde
-       [(l/== ntype ?type) (l/== q head)]
-       [(nodetypeo tail ntype q)])))))
+   (l/fresh [res]
+     (l/matche [head]
+       ([{:type ?type :value _ :name _ }]
+         (l/conde
+           [(l/== ntype ?type) (nodetypeo tail ntype res) (l/== q (l/lcons head res))]
+           [(l/!= ntype ?type) (nodetypeo tail ntype q)]))))))

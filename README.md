@@ -35,7 +35,7 @@ Or as a zipper, but still tasting like Java:
 ;; 1
 ```
 
-Or use one of a (slowly) growing number of `core.logic` relations:
+Or use one of a (slowly) growing number of `core.logic` relations such as `nodetypeo` and `dupeo`:
 
 ```clojure
 (def ruby-code "class Dude
@@ -59,20 +59,17 @@ Or use one of a (slowly) growing number of `core.logic` relations:
                 end")
 
 (defn get-duplicate-method-names [ruby-code]
-  (let [ruby-data   (parse-ruby-code ruby-code)
-        ast-as-list (for [d ruby-data
-                           :when (and (seq (:name d))
-                                      (= "DEFNNODE" (:type d)))]
-                      [(:name d) (:type d)])
-        results     (l/run* [q]
-                      (l/fresh [ls dupes]
-                        (l/== ls ast-as-list)
-                        (dupeo ls dupes)
-                        (l/== dupes q)))]
-    results))
+  (let [nodes   (parse-ruby-code ruby-code)
+        results (l/run* [q]
+                  (l/fresh [a b c d]
+                    (l/== a nodes)
+                    (nodetypeo a "DEFNNODE" c)
+                    (dupeo c d)
+                    (l/== q d)))]
+        results))
 
 (get-duplicate-method-names ruby-code)
-;; => ((["awesome" "DEFNNODE"] ["bro" "DEFNNODE"]))
+;;=> (({:type "DEFNNODE", :value nil, :name "awesome"} {:type "DEFNNODE", :value nil, :name "bro"}))
 
 ;; Examine your ast by generating an image of the tree
 (view-ruby-ast ruby-code)
