@@ -82,9 +82,10 @@ Examine your ast by generating an image of the tree
 ```
 <img src="tree.png">
 
-```clojure
-;; Transform source code with a zipper and then transform back to source code
 
+Transform source code with a zipper and then transform back to source code
+
+```clojure
 (ruby-code-zipper ruby-code)
 ;; [#<RootNode (RootNode, (NewlineNode, (ClassNode, (Colon2ImplicitNode:Dude), (BlockNode, (NewlineNode, (DefnNode:awesome, (ArgumentNode:awesome), (ArgsNode), (NewlineNode, (StrNode)))), (NewlineNode, (DefnNode:cool, (ArgumentNode:cool), (ArgsNode), (NewlineNode, (StrNode)))), (NewlineNode, (DefnNode:awesome, (ArgumentNode:awesome), (ArgsNode), (NewlineNode, (StrNode)))), (NewlineNode, (DefnNode:bro, (ArgumentNode:bro), (ArgsNode))), (NewlineNode, (DefnNode:bro, (ArgumentNode:bro), (ArgsNode)))))))> nil]
 
