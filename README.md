@@ -111,6 +111,10 @@ end>
 
 `lein test`
 
+## Plans
+
+* Associate original jruby-parser node information as metadata to node map object, for altering and rehydrating source as ast
+
 ## License
 
 Copyright © 2013 Michael R. Bernstein
