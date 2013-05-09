@@ -70,15 +70,41 @@ Or use one of a (slowly) growing number of `core.logic` relations such as `nodet
 
 (get-duplicate-method-names ruby-code)
 ;;=> (({:type "DEFNNODE", :value nil, :name "awesome"} {:type "DEFNNODE", :value nil, :name "bro"}))
+```
 
-;; Examine your ast by generating an image of the tree
+Examine your ast by generating an image of the tree
+
+```clojure
 (view-ruby-ast ruby-code)
 
 ;; or save it as a file
 (save-ruby-ast-image ruby-code "tree.png")
 ```
-
 <img src="tree.png">
+
+```clojure
+;; Transform source code with a zipper and then transform back to source code
+
+(ruby-code-zipper ruby-code)
+;; [#<RootNode (RootNode, (NewlineNode, (ClassNode, (Colon2ImplicitNode:Dude), (BlockNode, (NewlineNode, (DefnNode:awesome, (ArgumentNode:awesome), (ArgsNode), (NewlineNode, (StrNode)))), (NewlineNode, (DefnNode:cool, (ArgumentNode:cool), (ArgsNode), (NewlineNode, (StrNode)))), (NewlineNode, (DefnNode:awesome, (ArgumentNode:awesome), (ArgsNode), (NewlineNode, (StrNode)))), (NewlineNode, (DefnNode:bro, (ArgumentNode:bro), (ArgsNode))), (NewlineNode, (DefnNode:bro, (ArgumentNode:bro), (ArgsNode)))))))> nil]
+
+(zipper-to-source (ruby-code-zipper ruby-code))
+#<StringWriter class Dude
+  def awesome
+    "first awesome"
+  end
+  def cool
+    "not awesome"
+  end
+  def awesome
+    "second awesome"
+  end
+  def bro
+  end
+  def bro
+  end
+end>
+```
 
 ## Tests
 

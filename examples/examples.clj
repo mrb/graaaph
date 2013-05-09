@@ -44,3 +44,9 @@
         results))
 
 (get-duplicate-method-names ruby-code)
+
+(def o
+  (let [writer (StringWriter.)
+        node (-> (ruby-code-zipper ruby-code) z/next z/next first)]
+    (.accept node (ReWriteVisitor. writer "(string)"))
+    writer))

@@ -4,8 +4,10 @@
                             SourcePosition)
            (org.jrubyparser.parser ParserConfiguration)
            (org.jrubyparser.ast Node)
+           (org.jrubyparser.rewriter ReWriteVisitor)
            (java.io File
-                    StringReader)
+                    StringReader
+                    StringWriter)
            (javax.imageio ImageIO))
   (:require [clojure.zip :as z]
             [clojure.core.logic :as l]
@@ -59,19 +61,19 @@
 ;; =============================================================================
 ;; AST Data Extraction Helpers
 
-;; A node is marked "invisible" by the jruby-parser if it does not contain valid
-;; data and can be ignored by programs like ours.
 (defn invalid-ast-node? [node]
+  "A node is marked "invisible" by the jruby-parser if it does not contain valid
+   data and can be ignored by programs like ours."
   (.isInvisible node))
 
-;; Literal nodes have values
 (defn value-node? [node]
+  "Literal nodes have values"
   (and
     (not (instance? org.jrubyparser.ast.ArrayNode node))
     (instance? org.jrubyparser.ast.ILiteralNode node)))
 
-;; Named nodes have names (e.g. class variables, ivars, etc.)
 (defn named-node? [node]
+  "Named nodes have names (e.g. class variables, ivars, etc.)"
   (instance? org.jrubyparser.ast.INameNode node))
 
 (defn scoping-node? [node]
@@ -113,15 +115,25 @@
 ;; =============================================================================
 ;; Parser interface
 
-;; Get the code as a zipper
 (defn ruby-code-zipper [ruby]
+  "returns a zipper on the ruby ast"
   (let [parsed (parse-ruby ruby)]
     (code-zipper parsed)))
 
-;; Get the code as a transformed, seqable clojure map
 (defn parse-ruby-code [ruby]
+  "transform the code into a seqable clojure map"
   (let [zipped (ruby-code-zipper ruby)]
       (tree-visitor zipped data-visitor)))
+
+;; =============================================================================
+;; Code rewriting
+
+(defn zipper-to-source [zipper]
+  "Transform Java ast node types back to ruby source"
+  (let [writer (StringWriter.)
+        node (first zipper)]
+    (.accept node (ReWriteVisitor. writer "(string)"))
+    writer))
 
 ;; =============================================================================
 ;; Rhizome AST visualization functions
