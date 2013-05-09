@@ -62,7 +62,7 @@
 ;; AST Data Extraction Helpers
 
 (defn invalid-ast-node? [node]
-  "A node is marked "invisible" by the jruby-parser if it does not contain valid
+  "A node is marked invisible by the jruby-parser if it does not contain valid
    data and can be ignored by programs like ours."
   (.isInvisible node))
 
