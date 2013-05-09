@@ -98,10 +98,11 @@
        [:end-offset   (.getEndOffset position)]])))
 
 (defn data-visitor [node-list]
-  (let [node (first node-list)]
+  (let [node (first node-list)
+        node-map {}]
     (if (and (not (nil? node))
              (not (invalid-ast-node? node)))
-        (into {}
+        (into node-map
           [[:type        (-> node .getNodeType str)]
            [:value       (if (value-node? node)
                            (.getValue node))]
@@ -142,9 +143,13 @@
   (let [zipper (first (ruby-code-zipper ruby-code))]
     (v/view-tree can-have-children? get-children zipper
         :options {:dpi 50}
-        :node->descriptor (fn [node] {:shape (cond (named-node? node) "rectangle")
-                                      :label (cond (named-node? node) (str (.getName node) " (" (str (.getNodeType node)) ")")
-                                                   :else (str (.getNodeType node)))}))))
+        :node->descriptor (fn [node] {:shape
+                                        (cond
+                                          (named-node? node) "rectangle")
+                                      :label
+                                        (cond
+                                          (named-node? node) (str (.getName node) " (" (str (.getNodeType node)) ")")
+                                          :else (str (.getNodeType node)))}))))
 
 (defn save-ruby-ast-image [ruby-code filename]
   (let [zipper (first (ruby-code-zipper ruby-code))
