@@ -21,3 +21,6 @@
            {:type "NEWLINENODE", :value nil, :name nil}
            {:type "STRNODE", :value nil, :name nil})
            (parse-ruby-code (:simple test-data)))))
+
+(deftest node-map-meta-not-nil
+  (is (not (nil? (:node (meta (first (parse-ruby-code (:args test-data)))))))))
