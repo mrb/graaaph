@@ -66,6 +66,11 @@
    data and can be ignored by programs like ours."
   (.isInvisible node))
 
+(defn valid-ast-node? [node]
+  "A visible, as in not invisible, AST node"
+  (and (not (nil? node))
+       (not (.isInvisible node))))
+
 (defn value-node? [node]
   "Literal nodes have values"
   (and
@@ -85,6 +90,17 @@
 (defn value-node? [node]
   (instance? org.jrubyparser.ast.SValueNode node))
 
+(defn get-node-type [node]
+  (-> node .getNodeType str))
+
+(defn get-node-value [node]
+  (if (value-node? node)
+    (.getValue node)))
+
+(defn get-node-name [node]
+  (if (named-node? node)
+    (.getName node)))
+
 ;; =============================================================================
 ;; AST Data Extraction
 
@@ -98,16 +114,15 @@
        [:end-offset   (.getEndOffset position)]])))
 
 (defn data-visitor [node-list]
-  (let [node (first node-list)
-        node-map {}]
-    (if (and (not (nil? node))
-             (not (invalid-ast-node? node)))
-        (into node-map
-          [[:type        (-> node .getNodeType str)]
-           [:value       (if (value-node? node)
-                           (.getValue node))]
-           [:name        (if (named-node? node)
-                           (.getName node))]]))))
+  "A visitor function that is applied to every node when
+  the AST traversed as a zipper."
+  (let [node (first node-list)]
+    (cond (valid-ast-node? node)
+      (with-meta
+        {:type  (get-node-type node)
+         :value (get-node-value node)
+         :name  (get-node-name node)}
+        {:node node}))))
 
 ;; [:position    (get-position-data node)]
 ;; [:class-path  (-> node .getCPath .getName)]
@@ -143,13 +158,14 @@
   (let [zipper (first (ruby-code-zipper ruby-code))]
     (v/view-tree can-have-children? get-children zipper
         :options {:dpi 50}
-        :node->descriptor (fn [node] {:shape
-                                        (cond
-                                          (named-node? node) "rectangle")
-                                      :label
-                                        (cond
-                                          (named-node? node) (str (.getName node) " (" (str (.getNodeType node)) ")")
-                                          :else (str (.getNodeType node)))}))))
+        :node->descriptor
+          (fn [node] {:shape
+                        (cond
+                          (named-node? node) "rectangle")
+                      :label
+                        (cond
+                          (named-node? node) (str (.getName node) " (" (str (.getNodeType node)) ")")
+                          :else (str (.getNodeType node)))}))))
 
 (defn save-ruby-ast-image [ruby-code filename]
   (let [zipper (first (ruby-code-zipper ruby-code))
