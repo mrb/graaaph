@@ -34,14 +34,14 @@
 (view-ruby-ast ruby-code)
 
 (defn get-duplicate-method-names [ruby-code]
-  (let [nodes   (parse-ruby-code ruby-code)
-        results (l/run* [q]
-                  (l/fresh [a b c d]
-                    (l/== a nodes)
-                    (nodetypeo a "DEFNNODE" c)
-                    (dupeo c d)
-                    (l/== q d)))]
-        results))
+  (let [nodes     (parse-ruby-code ruby-code)
+        defnnodes (l/run* [q]
+                    (l/fresh [a b c d n e]
+                      (l/== a nodes)
+                      (nodetypeo a "DEFNNODE" c)
+                      (nodenameo c n e)
+                      (l/== e q)))]
+    defnnodes))
 
 (get-duplicate-method-names ruby-code)
 
@@ -49,4 +49,36 @@
 
 (zipper-to-source (ruby-code-zipper ruby-code))
 
-(parse-ruby-code ruby-code)
+(->
+  (ruby-code-zipper (:add data))
+  z/down
+  z/down
+  z/down
+  z/node)
+
+(parse-ruby-code (:add data))
+
+(def n (->
+  (ruby-code-zipper "1")
+  z/next
+  z/next
+  z/node))
+
+(l/run* [q]
+   (l/fresh [n t]
+      (l/== n (parse-ruby-code ruby-code))
+      (nodenameo n "awesome" q)))
+
+(l/run* [q]
+   (l/fresh [n t]
+      (l/== n seq-of-maps)
+
+(l/run* [q]
+   (l/fresh [n t]
+      (l/== n (parse-ruby-code ruby-code))
+      (nodenameo n q t)))
+
+(l/run* [q]
+   (l/fresh [n t]
+     (l/== n (parse-ruby-code ruby-code))
+     (nodetypeo n "DEFNNODE" q)))

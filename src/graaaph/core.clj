@@ -85,7 +85,9 @@
   (instance? org.jrubyparser.ast.IScopingNode node))
 
 (defn argument-node? [node]
-  (instance? org.jrubyparser.ast.IArgumentNode node))
+  (or
+    (instance? org.jrubyparser.ast.IArgumentNode node)
+    (instance? org.jrubyparser.ast.ArgumentNode node)))
 
 (defn value-node? [node]
   (instance? org.jrubyparser.ast.SValueNode node))
@@ -107,22 +109,22 @@
 (defn get-position-data [node]
   (let [position (.getPosition node)]
     (into {}
-      [[:file         (.getFile position)]
-       [:start-line   (.getStartLine position)]
-       [:end-line     (.getEndLine position)]
+      [[:file         (.getFile        position)]
+       [:start-line   (.getStartLine   position)]
+       [:end-line     (.getEndLine     position)]
        [:start-offset (.getStartOffset position)]
-       [:end-offset   (.getEndOffset position)]])))
+       [:end-offset   (.getEndOffset   position)]])))
 
 (defn data-visitor [node-list]
   "A visitor function that is applied to every node when
   the AST traversed as a zipper."
   (let [node (first node-list)]
     (cond (valid-ast-node? node)
-      (with-meta
-        {:type  (get-node-type node)
-         :value (get-node-value node)
-         :name  (get-node-name node)}
-        {:node node}))))
+      (into {}
+        [[:type  (get-node-type  node)]
+         [:value (get-node-value node)]
+         [:name  (get-node-name  node)]
+         [:node node]]))))
 
 ;; [:position    (get-position-data node)]
 ;; [:class-path  (-> node .getCPath .getName)]
@@ -148,8 +150,15 @@
   "Transform Java ast node types back to ruby source"
   (let [writer (StringWriter.)
         node (first zipper)]
-    (.accept node (ReWriteVisitor. writer "(string)"))
+    (cond
+      (argument-node? node) ""
+      :else
+        (.accept node (ReWriteVisitor. writer "(string)")))
     writer))
+
+(defn node-to-source [node]
+  "Transform a Java AST node back to ruby source"
+  (zipper-to-source [node nil]))
 
 ;; =============================================================================
 ;; Rhizome AST visualization functions
@@ -212,14 +221,41 @@
         [(membero head tail) (rember*o head tail new-tail) (dupeo new-tail res) (l/== q (l/lcons head res))]
         [(not-membero head tail) (dupeo tail q)]))))
 
-(l/defne nodetypeo
-  "a relation where q is a collection of nodes which match type ntype"
-  [nodes ntype q]
-  ([() _ ()])
-  ([[head . tail] _ _]
-   (l/fresh [res]
-     (l/matche [head]
-       ([{:type ?type :value _ :name _ }]
+(l/defne nodeattro
+  "a relation where q is a collection of nodes which contain a map
+  where attr is the key and nattr is the value"
+  [nodes attribute value out]
+  ([() _ _ ()])
+  ([[head . tail] _ _ _]
+   (l/fresh [?out ?value]
+     (l/featurec head {attribute ?value})
+     (l/conde
+       [(l/nonlvaro value)
+          (l/== ?value value) (nodeattro tail attribute value ?out) (l/== out (l/lcons head ?out))]
+       [(l/lvaro value)
+          (nodeattro tail attribute value out)]))))
+
+(l/defne nodeattro2
+  "a relation where q is a collection of nodes which contain a map
+  where attr is the key and nattr is the value"
+  [nodes attribute value out]
+  ([() _ value ()])
+  ([[head . tail] _ value _]
+   (l/fresh [?out ?value]
+     (l/conde
+       [(l/featurec head {attribute ?value})
          (l/conde
-           [(l/== ntype ?type) (nodetypeo tail ntype res) (l/== q (l/lcons head res))]
-           [(l/!= ntype ?type) (nodetypeo tail ntype q)]))))))
+           [(l/nonlvaro value)
+              (l/== value ?value) (nodeattro tail attribute value ?out) (l/== out (l/lcons head ?out))]
+           [(l/lvaro value)
+              (l/== value ?value) (nodeattro tail attribute value out)])]))))
+
+(defn nodetypeo
+  "a relation where q is a collection of nodes which match type ntype see nodeattro"
+  [nodes ntype q]
+    (nodeattro nodes :type ntype q))
+
+(defn nodenameo
+  "a relation where q is a collection of nodes which match name nname see nodeattro"
+  [nodes nname q]
+    (nodeattro nodes :name nname q))
