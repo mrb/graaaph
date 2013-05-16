@@ -1,5 +1,6 @@
 (ns graaaph.core-examples
-  (:use graaaph.core))
+  (:use graaaph.core)
+  (:require [clojure.core.logic :as l]))
 
 (def data {:simple          "def a;'ok';end"
            :args            "class Dude; def initialize(cool=nil); @cool = cool; end; end; d = Dude.new(:cool);"
