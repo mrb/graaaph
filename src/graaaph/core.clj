@@ -242,13 +242,12 @@
   ([() _ value ()])
   ([[head . tail] _ value _]
    (l/fresh [?out ?value]
+     (l/featurec head {attribute ?value})
      (l/conde
-       [(l/featurec head {attribute ?value})
-         (l/conde
-           [(l/nonlvaro value)
-              (l/== value ?value) (nodeattro tail attribute value ?out) (l/== out (l/lcons head ?out))]
-           [(l/lvaro value)
-              (l/== value ?value) (nodeattro tail attribute value out)])]))))
+       [(l/nonlvaro value)
+         (l/== value ?value) (nodeattro tail attribute value ?out) (l/== out (l/lcons head ?out))]
+       [(l/lvaro value)
+         (l/== value ?value) (nodeattro tail attribute value out)]))))
 
 (defn nodetypeo
   "a relation where q is a collection of nodes which match type ntype see nodeattro"
