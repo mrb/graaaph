@@ -72,7 +72,7 @@
 
 (l/run* [q]
    (l/fresh [n t]
-      (l/== n seq-of-maps)
+      (l/== n seq-of-maps)))
 
 (l/run* [q]
    (l/fresh [n t]
