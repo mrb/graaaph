@@ -66,20 +66,40 @@
   z/node))
 
 (l/run* [q]
-   (l/fresh [n t]
-      (l/== n (parse-ruby-code ruby-code))
-      (nodenameo n "awesome" q)))
+  (l/== q (parse-ruby-code ruby-code)))
 
+;; nodeattro now works on *one* node
 (l/run* [q]
-   (l/fresh [n t]
-      (l/== n seq-of-maps)))
+  (l/fresh [node]
+    (l/== node (first (parse-ruby-code ruby-code)))
+    (nodeattro node :name q)))
 
+;; get only the names w/ mapo
 (l/run* [q]
-   (l/fresh [n t]
-      (l/== n (parse-ruby-code ruby-code))
-      (nodenameo n q t)))
+  (l/fresh [nodes]
+    (l/== nodes (parse-ruby-code ruby-code))
+    (mapo nodes #(nodeattro %1 :name %2) q)))
 
+;; filter out nodes w/o names
 (l/run* [q]
-   (l/fresh [n t]
-     (l/== n (parse-ruby-code ruby-code))
-     (nodetypeo n "DEFNNODE" q)))
+  (l/fresh [nodes]
+    (l/== nodes (parse-ruby-code ruby-code))
+    (filtero nodes
+      (fn [node]
+        (l/fresh [value]
+          (nodeattro node :name value)
+          (l/!= value nil)))
+      q)))
+
+;; extract names
+(l/run* [q]
+  (l/fresh [nodes nodes']
+    (l/== nodes (parse-ruby-code ruby-code))
+    (filtero nodes
+      (fn [node]
+        (l/fresh [value]
+          (nodeattro node :name value)
+          (l/!= value nil)))
+      nodes')
+    (mapo nodes' #(nodeattro %1 :name %2) q)))
+

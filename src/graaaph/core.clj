@@ -221,33 +221,29 @@
         [(membero head tail) (rember*o head tail new-tail) (dupeo new-tail res) (l/== q (l/lcons head res))]
         [(not-membero head tail) (dupeo tail q)]))))
 
-(l/defne nodeattro
-  "a relation where q is a collection of nodes which contain a map
-  where attr is the key and nattr is the value"
-  [nodes attribute value out]
-  ([() _ _ ()])
-  ([[head . tail] _ _ _]
-   (l/fresh [?out ?value]
-     (l/featurec head {attribute ?value})
-     (l/conde
-       [(l/nonlvaro value)
-          (l/== ?value value) (nodeattro tail attribute value ?out) (l/== out (l/lcons head ?out))]
-       [(l/lvaro value)
-          (nodeattro tail attribute value out)]))))
+(l/defne filtero
+  [xs g out]
+  ([() _ ()])
+  ([[x . xrs] _ _]
+    (l/conda
+      [(g x)
+       (l/fresh [out']
+         (nodefiltero xrs g out')
+         (l/conso x out' out))]
+      [(nodefiltero xrs g out)])))
 
-(l/defne nodeattro2
-  "a relation where q is a collection of nodes which contain a map
-  where attr is the key and nattr is the value"
-  [nodes attribute value out]
-  ([() _ value ()])
-  ([[head . tail] _ value _]
-   (l/fresh [?out ?value]
-     (l/featurec head {attribute ?value})
-     (l/conde
-       [(l/nonlvaro value)
-         (l/== value ?value) (nodeattro tail attribute value ?out) (l/== out (l/lcons head ?out))]
-       [(l/lvaro value)
-         (l/== value ?value) (nodeattro tail attribute value out)]))))
+(l/defne mapo
+  [xs g out]
+  ([() _ ()])
+  ([[x . xrs] _ [x' . out']]
+    (g x x')
+    (mapo xrs g out')))
+
+(defn nodeattro
+  ([node attr]
+    (nodeattro node attr (l/lvar)))
+  ([node attr value]
+    (l/featurec node {attr value})))
 
 (defn nodetypeo
   "a relation where q is a collection of nodes which match type ntype see nodeattro"
