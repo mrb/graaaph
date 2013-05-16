@@ -228,9 +228,9 @@
     (l/conda
       [(g x)
        (l/fresh [out']
-         (nodefiltero xrs g out')
+         (filtero xrs g out')
          (l/conso x out' out))]
-      [(nodefiltero xrs g out)])))
+      [(filtero xrs g out)])))
 
 (l/defne mapo
   [xs g out]
