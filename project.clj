@@ -4,7 +4,5 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.0"]
-                 [org.clojure/algo.monads "0.1.4"]
                  [org.jruby/jrubyparser "0.4.1"]
-                 [org.clojure/core.logic "0.8.3"]
                  [rhizome "0.1.3"]])

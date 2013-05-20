@@ -98,8 +98,22 @@
     (filtero nodes
       (fn [node]
         (l/fresh [value]
+          (nodeattro node :type "DEFNNODE")
           (nodeattro node :name value)
           (l/!= value nil)))
       nodes')
     (mapo nodes' #(nodeattro %1 :name %2) q)))
 
+;; dupeo names
+(l/run* [q]
+  (l/fresh [nodes nodes' dupes]
+    (l/== nodes (parse-ruby-code ruby-code))
+    (filtero nodes
+      (fn [node]
+        (l/fresh [value]
+          (nodeattro node :type "DEFNNODE")
+          (nodeattro node :name value)
+          (l/!= value nil)))
+      nodes')
+    (mapo nodes' #(nodeattro %1 :name %2) dupes)
+    (dupeo dupes q)))

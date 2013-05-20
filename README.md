@@ -115,8 +115,12 @@ end>
 
 * Associate original jruby-parser node information as metadata to node map object, for altering and rehydrating source as ast
 
+## Credits
+
+* @swannodette for the amazing guidance and work on `nodeattro`, `mapo`, `filtero`, `rembero`, etc.
+
 ## License
 
-Copyright © 2013 Michael R. Bernstein
+Copyright © 2013 Michael R. Bernstein and contributors
 
 Distributed under the Eclipse Public License, the same as Clojure.
